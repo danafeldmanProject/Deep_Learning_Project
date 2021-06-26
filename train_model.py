@@ -64,9 +64,8 @@ def Put_Into_Lists(train_directory_path,test_directory_path,CLASSES,IMAGE_SIZE):
     
 
 def Train(model,train_images, train_labels):
-    
-    model.compile(optimizer = 'adam', loss = 'sparse_categorical_crossentropy', metrics=['accuracy'])
-    history = model.fit(train_images, train_labels, batch_size=128, epochs=7, validation_split = 0.4)
+    model.compile(optimizer='adam',loss='binary_crossentropy',metrics=['accuracy'])
+    history = model.fit(train_images, train_labels, batch_size=64, epochs=7, validation_split = 0.4)
     model.save('model.h5')
     
     return history
