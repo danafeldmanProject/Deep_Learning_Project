@@ -1,165 +1,185 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jun  4 20:58:54 2021
-
+Created on Fri Jun 18 16:04:17 2021
 @author: danaf
 """
 
-
-#this module creates a directory and creates train and test sub-directories in it.
-#in each sub-directory, it creates two sub-directories, one for each class.
-
-
-'''
-this module deals with the data
-'''
-import os
-import shutil
-import cv2
 import matplotlib.pyplot as plt
-from zipfile import ZipFile
+import cv2
+import shutil
+import os 
+import numpy as np
+import seaborn as sn; sn.set(font_scale=1.4)
+import tensorflow as tf 
+import pandas as pd
+from sklearn.utils import shuffle
 
+import datamod
+import my_Model
+import train_model
 import prints
 
 
+DIRECTORY_PATH=r'C:\Users\danaf\OneDrive\Documents' #main directory location 
+ORIGINAL_PATH=r'C:\Users\danaf\OneDrive\Documents'   #where the zip was unloaded
+IMAGE_SIZE = (150, 150) 
+CLASSES=["men","women"]
+MODEL_PATH=r'C:\Users\danaf\OneDrive\Desktop\DeepLearning\project\classification\model.h5'
 
+ 
+    
+    
+def handle_data(plot_graphs):    
+    #main_directory_path=datamod.arrange_directories(DIRECTORY_PATH,"dataset",CLASSES)
+    main_directory_path=os.path.join(DIRECTORY_PATH,"dataset")
+    (train_images, train_labels), (test_images, test_labels) = train_model.Put_Into_Lists(os.path.join(main_directory_path, "train"),
+                                                                                          os.path.join(main_directory_path, "test"),
+                                                                                          CLASSES,
+                                                                                          IMAGE_SIZE)
+    train_images, train_labels = shuffle(train_images, train_labels, random_state=25)
+    #normelize pixel values
+    train_images = train_images / 255.0 
+    test_images = test_images / 255.0
+    
+    n_train = train_labels.shape[0]
+    n_test = test_labels.shape[0]
+    
+    if plot_graphs:
+        prints.Plot_Information(train_labels,test_labels,n_train,n_test,CLASSES,IMAGE_SIZE)
+    
+    return (train_images, train_labels), (test_images, test_labels)
 
-def make_directory(parent_dir,new_directory_name):
-    '''
-    the function gets a directory name and directory path from the user and creates a directory according to that input,
-    if the directory doesn't already exist.
-    if the user presses enter when inputing directory path, default is desktop
-    the function creates sub-direcories named "train" and "test" in the input directory
-    '''
-    #make sub-directory
-    path1 = os.path.join(parent_dir,new_directory_name)
-
-    #create directory if doesn't exist
-    isFile = os.path.isdir(path1)   
-    if isFile is False:  
-        os.mkdir(path1) 
-        print(path1+" directory made") 
+def check_path(path):
+    isFile = os.path.isdir(path)
+    if isFile==False:
+        prints.printError("path invalid, enter again")
+        return False
     else:
-        print(path1+" directory already exists")
-
-    return path1
-
-
-
-def arrange_directories(parent_directory,directory_name,CLASSES):
-    '''
-    the function gets a directory name and directory path from the user
-    the fuction creates the directories for the arrangment of the dataset:
-        parent directory
-        two sub-directories for train and test
-        for both train and test: two sub directories for the classes
-    '''
-    #make sub-directory
-    directory_path = make_directory(parent_directory,directory_name)
-    make_directory(directory_path,"train")
-    make_directory(directory_path,"test")
-    for class_name in CLASSES:
-        for directory in os.listdir(directory_path):
-             make_directory(os.path.join(directory_path,directory), class_name)
-    print("done")
-    return directory_path
-      
-
-
-       
-def arrange_dataset(ORIGINAL_PATH,destination_main_path):
-    #destination_main_path=r'C:\Users\danaf\OneDrive\Desktop\DeepLearning\tries\datata'#where the data goes
-    train_moved=False
-    moved=False
-    while moved==False:
-        for directory in os.listdir(destination_main_path):
-            if directory=="train" and train_moved==False:
-                for class_name in os.listdir(os.path.join(destination_main_path,directory)):
-                    dir_path=os.path.join(os.path.join(destination_main_path,directory),class_name)
-                    pic_path=os.path.join(ORIGINAL_PATH,class_name)
-                    move_pictures(dir_path,pic_path,True)
-                    #print("moved")
-                train_moved=True
+        return True
     
-            if directory=="test" and train_moved:  
-                for class_name in os.listdir(os.path.join(destination_main_path,directory)):
-                    dir_path=os.path.join(os.path.join(destination_main_path,directory),class_name)
-                    pic_path=os.path.join(ORIGINAL_PATH,class_name)
-                    move_pictures(dir_path,pic_path,False)
-                    #print("moved2")
-                moved=True
-
-
-
-           
-
-def move_pictures(dir_path,pic_path,isTrain):
-    '''
-    inputs:destination directory to move files to, directory to move files from, boolian for if train or not
     
-    the function moves files to directories:
-        -if the destination directory is train, move 70% of files from pic_path to train
-        -if the destination directory is test, move all of the files from pic_path to test
-    '''
-
-    files = os.listdir(pic_path)  #file list from pic_path
-    if isTrain: #move 70% of files
-        print(isTrain)
-        i=(int)(len(files)*0.8)
-        print(i)
-        for file in files:
-            if(i>0):
-                shutil.move(os.path.join(pic_path, file), dir_path)
-                i-=1  
-    else:#move all files
-        for file in files:
-            shutil.move(os.path.join(pic_path, file), dir_path)
-
-
-
-
-def find_gif(pic_path):
-    for class_name in os.listdir(pic_path):
-        sub_path = os.path.join(pic_path, class_name)
-        for img in os.listdir(sub_path):
-            if img.endswith('.gif'):
-                print(img)
-                os.remove(os.path.join(sub_path, img))               
-
-                
-def Print_plot_pics(path):
-    '''
-    input:path of directory
-    the function prints all images in a directory and their names
-    '''
-
-    files = os.listdir(path) 
-    for file in files:
-        print(file)#image name
-        plt.imshow(cv2.imread(os.path.join(path,file)))
-        plt.show()
-   
-
-
-def extract_Zip(zip_path,parent): 
+def path_inputs():
+    #path for saved model
+    done=False
+    while done==False:
+        prints.printOptions("enter project path- where you saved the .py files: ")
+        project_path=input()
+        done=check_path(project_path)    
+    MODEL_PATH=os.path.join(project_path,"model.h5")
     
-    path = zip_path
+    done=False
+    while done==False:
+        prints.printOptions("enter zip path: ")
+        zip_file_path=input()
+        done=check_path(project_path)
+    
+    done=False
+    while done==False:
+        prints.printOptions("enter directory to unload dataset into: ")
+        DIRECTORY_PATH=input()
+        done=check_path(project_path)
+    
+    #extract dataset into ORIGINAL_LOCATION
+    datamod.extract_Zip(zip_file_path,ORIGINAL_PATH) 
+    
+  
+    
+    
+    
+def case_one():
+    '''
+    get the data ready for training\testing\predicting
+    '''
+    #get the paths
+    path_inputs()
+
+    #arrange data into directories and transform to tensors       
+    (train_images, train_labels), (test_images, test_labels)=handle_data(plot_graphs=True)
+    
+    return (train_images, train_labels), (test_images, test_labels)
+
+
+def case_two():
+    '''
+    train model
+    '''
+    (train_images, train_labels), (test_images, test_labels)=handle_data(plot_graphs=False)
+    model=my_Model.build_model()
+    history=train_model.handle_train(model,train_images, train_labels)
+    
+
+    
+def case_three():
+    '''
+    test model
+    '''
+    (train_images, train_labels),(test_images, test_labels)=handle_data(plot_graphs=False)
+    train_model.test_model(tf.keras.models.load_model(MODEL_PATH),test_images, test_labels)
+
+
+def options():
     """
-    we cheak if the file/folder is zip by its ending - file type
+    This function prints for the user his options (UI)
     """
-    if path.endswith('.zip'):
-        path = parent 
-        """
-        extract the folder to new location that the user chose
-        """        
-        with ZipFile(zip_path, 'r') as zipObj:
-            # Extract all the contents of zip file in different directory
-            zipObj.extractall(path)
-            prints.printProcess("extracted")
+    prints.printOptions("******************************************")
+    prints.printOptions("*          USER INTERFACE                *")
+    prints.printOptions("*                                        *")
+    prints.printOptions("*   Enter 1 --> create sorted data set   *")
+    prints.printOptions("*   Enter 2 --> train the model          *")
+    prints.printOptions("*   Enter 3 --> test the model           *")
+    prints.printOptions("*   Enter space bar --> exit             *")
+    prints.printOptions("*                                        *")
+    prints.printOptions("******************************************")
+
+    
+def Main():
+    
+    options()
+    flag=True
+    while(flag):
+        prints.printOptions("--> Your Choice: ")
+        choice = input("Enter: ")
         
-    else:
-        prints.printProcess("not zip file")
-    return path
+        if choice == '1':
+            """
+            if the use enter 1 -> the directory of the data will be updated
+            """
+            (train_images, train_labels),(test_images, test_labels)=case_one()
+            prints.printProcess("[INFO] Using new data set")
+    
+        if choice == '2':
+            """
+            if the use enter 2 -> the directory of the model and the labeld will be updated
+            """
+            case_two()
+            prints.printProcess("[INFO] Using trained model")
+         
+        if choice == '3':
+            """
+            if the use enter 3 -> the program will use the updated directory and test the model
+            """   
+            case_three()
+
+            
+        if choice == ' ':
+            prints.printProcess("[INFO] Exiting...")
+            flag = False
+    
+    
+    
+    
+    
+    
+    
+Main()
+    
+    
+    
+    
+    
+    
+    
+     
 
 
     
