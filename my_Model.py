@@ -36,7 +36,7 @@ def build_model():
     # Hidden layer with 512 neurons and Rectified Linear Unit activation function 
     model.add(keras.layers.Dense(512,activation='relu'))
     
-    # Output layer with single neuron which gives 0 for Cat or 1 for Dog 
+    # Output layer with single neuron which gives 0 for Male or 1 for Female
     #Here we use sigmoid activation function which makes our model output to lie between 0 and 1
     model.add(keras.layers.Dense(1,activation='sigmoid'))
     
