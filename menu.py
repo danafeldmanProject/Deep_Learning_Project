@@ -1,18 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jun 18 16:04:17 2021
-
 @author: danaf
 """
 
-import matplotlib.pyplot as plt
-import cv2
-import shutil
 import os 
-import numpy as np
 import seaborn as sn; sn.set(font_scale=1.4)
 import tensorflow as tf 
-import pandas as pd
 from sklearn.utils import shuffle
 
 import datamod
@@ -21,24 +15,37 @@ import train_model
 import prints
 
 
-DIRECTORY_PATH=r'C:\Users\danaf\OneDrive\Documents' #main directory location 
-ORIGINAL_PATH=r'C:\Users\danaf\OneDrive\Documents'   #where the zip was unloaded
+#DIRECTORY_PATH=r'C:\Users\danaf\OneDrive\Documents' #main directory location 
+#ORIGINAL_PATH=r'C:\Users\danaf\OneDrive\Documents'   #where the zip was unloaded
+#IMAGE_SIZE = (150, 150) 
+#CLASSES=["men","women"]
+#MODEL_PATH=r'C:\Users\danaf\OneDrive\Desktop\DeepLearning\project\classification\model.h5' 
+
+
+DIRECTORY_PATH=r'C:\Users\Student\OneDrive\Documents\Deep_Learning_Project-main' #main directory location 
+ORIGINAL_PATH=r'C:\Users\Student\OneDrive\Documents'   #where the zip was unloaded
 IMAGE_SIZE = (150, 150) 
 CLASSES=["men","women"]
-MODEL_PATH=r'C:\Users\danaf\OneDrive\Desktop\DeepLearning\project\classification\model.h5'
+MODEL_PATH=r'C:\Users\Student\OneDrive\Documents\Deep_Learning_Project-main\model.h5'
 
- 
-    
     
 def handle_data(plot_graphs):    
-    main_directory_path=datamod.arrange_directories(DIRECTORY_PATH,"dataset",CLASSES)
-    #datamod.arrange_dataset(ORIGINAL_PATH,main_directory_path)
-                    
+    '''
+    make arrays of data (images and labels), return them
+    normelize pixel values
+    if plot_graphs==True:
+        plot the information about the data
+    '''
+    path=DIRECTORY_PATH
+    main_directory_path=os.path.join(path,"dataset")
+    class_names=CLASSES
+    img_size=IMAGE_SIZE
     (train_images, train_labels), (test_images, test_labels) = train_model.Put_Into_Lists(os.path.join(main_directory_path, "train"),
                                                                                           os.path.join(main_directory_path, "test"),
-                                                                                          CLASSES,
-                                                                                          IMAGE_SIZE)
+                                                                                          class_names,
+                                                                                          img_size)
     train_images, train_labels = shuffle(train_images, train_labels, random_state=25)
+    
     #normelize pixel values
     train_images = train_images / 255.0 
     test_images = test_images / 255.0
@@ -47,11 +54,15 @@ def handle_data(plot_graphs):
     n_test = test_labels.shape[0]
     
     if plot_graphs:
-        prints.Plot_Information(train_labels,test_labels,n_train,n_test,CLASSES,IMAGE_SIZE)
+        prints.Plot_Information(train_labels,test_labels,n_train,n_test,class_names,img_size)
     
     return (train_images, train_labels), (test_images, test_labels)
 
+
 def check_path(path):
+    '''
+    check whether path is valid (exists)
+    '''
     isFile = os.path.isdir(path)
     if isFile==False:
         prints.printError("path invalid, enter again")
@@ -61,6 +72,9 @@ def check_path(path):
     
     
 def path_inputs():
+    '''
+    get inputs for paths
+    '''
     #path for saved model
     done=False
     while done==False:
@@ -78,17 +92,13 @@ def path_inputs():
     done=False
     while done==False:
         prints.printOptions("enter directory to unload dataset into: ")
-        ORIGINAL_PATH=input()
-        done=check_path(project_path)
-    
-    #extract dataset into ORIGINAL_LOCATION
-    datamod.extract_Zip(zip_file_path,ORIGINAL_PATH) 
-    
-    done=False
-    while done==False:
-        prints.printOptions("enter destination directory for train and test: ") #where the data is splited into train and test
         DIRECTORY_PATH=input()
         done=check_path(project_path)
+    
+    #extract dataset 
+    path=DIRECTORY_PATH
+    datamod.extract_Zip(zip_file_path,path) 
+    
   
     
     
@@ -121,7 +131,8 @@ def case_three():
     test model
     '''
     (train_images, train_labels),(test_images, test_labels)=handle_data(plot_graphs=False)
-    train_model.test_model(tf.keras.models.load_model(MODEL_PATH),test_images, test_labels)
+    trained_model_path=MODEL_PATH
+    train_model.test_model(tf.keras.models.load_model(trained_model_path),test_images, test_labels)
 
 
 def options():
@@ -131,7 +142,7 @@ def options():
     prints.printOptions("******************************************")
     prints.printOptions("*          USER INTERFACE                *")
     prints.printOptions("*                                        *")
-    prints.printOptions("*   Enter 1 --> create sorted data set   *")
+    prints.printOptions("*   Enter 1 --> get data information     *")
     prints.printOptions("*   Enter 2 --> train the model          *")
     prints.printOptions("*   Enter 3 --> test the model           *")
     prints.printOptions("*   Enter space bar --> exit             *")
@@ -183,6 +194,10 @@ Main()
     
     
     
+    
+    
+    
+     
     
     
     
