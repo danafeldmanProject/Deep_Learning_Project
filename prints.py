@@ -10,7 +10,7 @@ Created on Sat Jun 19 15:57:20 2021
     this file contains the function that prints messages for the user in colors
 """
 
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore, Style
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -46,23 +46,26 @@ def printProcess(message):
     Style.RESET_ALL
     
     
-def Plot_Information(train_labels,test_labels,n_train,n_test,CLASSES,IMAGE_SIZE):
+def Plot_Information(train_labels,test_labels,n_train,n_test,class_names,image_size):
+    '''
+        plot information about dataset
+    '''
     print ("Number of training examples: {}".format(n_train))
     print ("Number of testing examples: {}".format(n_test))
-    print ("Each image is of size: {}".format(IMAGE_SIZE))
+    print ("Each image is of size: {}".format(image_size))
     
     _, train_counts = np.unique(train_labels, return_counts=True)
     _, test_counts = np.unique(test_labels, return_counts=True)
     pd.DataFrame({'train': train_counts,
                   'test': test_counts}, 
-                 index=CLASSES
+                 index=class_names
                 ).plot.bar()
     plt.show()
     
     
     plt.pie(train_counts,
         explode=(0, 0) , 
-        labels=CLASSES,
+        labels=class_names,
         autopct='%1.1f%%')
     plt.axis('equal')
     plt.title('Proportion of each observed category')
